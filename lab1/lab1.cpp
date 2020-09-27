@@ -16,10 +16,13 @@ struct point {
 };
 
 class figure {
+friend class List;
 private:
 	point* begin;
 	point* end;
 	int n;
+	class figure* next;
+	class figure* prev;
 
 	double AreaTriangle(dot a1, dot a2, dot a3) {
 		double a, b, c, p;
@@ -31,8 +34,23 @@ private:
 	}
 
 public:
-	figure() : begin{ nullptr }, end{ nullptr }, n{ 0 } {}
+	figure() : begin{ nullptr }, end{ nullptr }, n{ 0 }, next{ nullptr }, prev{ nullptr } {}
 
+	bool Isempty() {
+		if (begin == end && begin == nullptr) return true;
+		else return false;
+	}
+	
+	void print() {
+		point* cur = begin;
+		cout << "{";
+		while (cur) {
+			cout << "(" << cur->value.x << "," << cur->value.y << ")";
+			cur = cur->next;
+		}
+		cout << "}" << endl;
+	}
+	
 	int size() {
 		return n;
 	}
@@ -151,12 +169,13 @@ public:
 		}
 	}
 
-	point* operator[](int index) {
+	dot operator[](int index) {
 		point* current = begin;
+		dot o;
 		int cur_index = 0;
 		while (current) {
 			if (cur_index == index) {
-				return current;
+				{ o = current->value; return o; }
 			}
 			current = current->next;
 			cur_index++;
@@ -165,9 +184,161 @@ public:
 	}
 };
 
+class List {
+private:
+	figure* begin;
+	figure* end;
+	int _size;
+public:
+	List() : begin{ nullptr }, end{ nullptr }, _size{ 0 } {}
+
+	int size() {
+		return _size;
+	}
+	figure operator[](int index) {
+		figure* current = begin;
+		figure x;
+		int cur_index = 0;
+		while (current) {
+			if (cur_index == index) {
+				{ x = *current; return x; }
+			}
+			current = current->next;
+			cur_index++;
+		}
+		//throw out_of_range{ "index=" + to_string(index) + " larger than list size=" + to_string(n) };
+	}
+
+	void print() {
+		figure* cur = begin;
+		while (cur) {
+			cur->print();
+			cur = cur->next;
+		}
+	}
+
+	void append(figure x) {
+		figure* new_figure = new figure;
+		new_figure->begin = x.begin;
+		new_figure->end = x.end;
+		new_figure->n = x.n;
+		if (begin == nullptr) {
+			begin = end = new_figure;
+		}
+		else {
+			new_figure->prev = end;
+			end->next = new_figure;
+			end = new_figure;
+		}
+		_size++;
+	}
+
+	void swap(int f1, int f2) {
+		if (f1 >= _size || f2 >= _size) cout << "Incorect input" << endl;
+		else if (f1!=f2)
+		{
+			figure* cur1 = begin, * cur2 = begin, * t1, * t2;
+			int i1 = 0, i2 = 0;
+			while (i1 < f1) {
+				cur1 = cur1->next;
+				i1++;
+			}
+			while (i2 < f2) {
+				cur2 = cur2->next;
+				i2++;
+			}
+			if (cur1 == begin && cur2 == end) { begin = cur2; end = cur1; }
+			else if (cur2 == begin && cur1 == end) { begin = cur1; end = cur2; }
+			else if (cur1 == begin) begin = cur2;
+			else if (cur1 == end) end = cur2;
+			else if (cur2 == begin) begin = cur1;
+			else if (cur2 == end) end = cur1;
+			if (fabs(f1 - f2) != 1)
+			{
+				if (cur1->prev) (cur1->prev)->next = cur2;
+				if (cur2->prev) (cur2->prev)->next = cur1;
+				if (cur1->next) (cur1->next)->prev = cur2;
+				if (cur2->next) (cur2->next)->prev = cur1;
+				t1 = cur2->prev; t2 = cur2->next;
+				cur2->prev = cur1->prev;
+				cur2->next = cur1->next;
+				cur1->prev = t1;
+				cur1->next = t2;
+			}
+			else
+			{
+				if (f2 > f1) {
+					if (cur1->prev) (cur1->prev)->next = cur2;
+					if (cur2->next) (cur2->next)->prev = cur1;
+					cur1->next = cur2->next;
+					cur2->prev = cur1->prev;
+					cur1->prev = cur2;
+					cur2->next = cur1;
+				}
+				else {
+					if (cur2->prev) (cur2->prev)->next = cur1;
+					if (cur1->next) (cur1->next)->prev = cur2;
+					cur2->next = cur1->next;
+					cur1->prev = cur2->prev;
+					cur2->prev = cur1;
+					cur1->next = cur2;
+				}
+			}
+		}
+	}
+};
+
+void insert_sort(List& list, bool growth, int num_keys, int(*key)(figure, figure), ...);
+int comparison(figure a, figure b, int num_keys, int(**key)(figure, figure));
+int key1(figure a, figure b);
+int key2(figure a, figure b);
+
 int main() {
-	figure a;
-	a.create();
-	a.CheckQuadrangle();
+	return 0;
+}
+
+void insert_sort(List& list, bool growth, int num_keys, int(*key)(figure, figure), ...)
+{
+	int i=1, p, j;
+	int(**k)(figure, figure) = &key;
+	while (i<list.size()) {
+		p = comparison(list[i - 1], list[i], num_keys, k);
+		j = i;
+		if (!growth) p *= -1;
+		while (p == 1 && j) {
+			list.swap(j - 1, j);
+			j--;
+			if (j>0) p = comparison(list[j - 1], list[j], num_keys, k);
+			if (!growth) p *= -1;
+		}
+		i++;
+	}
+}
+
+int comparison(figure a, figure b, int num_keys, int(**key)(figure, figure))
+{
+	int(**k)(figure, figure) = key;
+	int p;
+	while (num_keys) {
+		p = (*k)(a, b);
+		if (p == 1) return 1;
+		else if (p == -1) return -1;
+		k++; num_keys--;
+	}
+	return 0;
+}
+
+int key1(figure a, figure b)
+{
+	if (a.Isempty() && b.Isempty()) return 0;
+	if (a.Isempty()) return -1;
+	if (b.Isempty()) return 1;
+	if (a[0].x > b[0].x) return 1;
+	if (a[0].x == b[0].x) return 0;
+	return -1;
+}
+
+int key2(figure a, figure b)
+{
 	return 0;
 }
