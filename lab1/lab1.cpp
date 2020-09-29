@@ -1,4 +1,7 @@
-﻿#include <iostream>
+﻿#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
+
+#include <iostream>
 #include <cmath>
 #include <string>
 
@@ -28,11 +31,12 @@ private:
 public:
 	figure() : begin{ nullptr }, end{ nullptr }, n{ 0 }, next{ nullptr }, prev{ nullptr } {}
 	
-	void set(int n, dot* arr) {
+	void set(int i, dot* arr) {
 		clear();
+		n = i;
 		point* new_point;
 		dot p;
-		while (n) {
+		while (i) {
 			p = *arr;
 			point* new_point = new point{ {p.x,p.y} };
 			if (begin == nullptr) {
@@ -43,7 +47,7 @@ public:
 				end->next = new_point;
 				end = new_point;
 			}
-			n--; arr++;
+			i--; arr++;
 		}
 	}
 	
@@ -52,7 +56,7 @@ public:
 		while (cur) {
 			del = cur;
 			cur = cur->next;
-			delete cur;
+			delete del;
 		}
 		begin = end = nullptr;
 		n = 0;
@@ -234,7 +238,7 @@ public:
 		while (cur) {
 			del = cur;
 			cur = cur->next;
-			delete cur;
+			delete del;
 		}
 		begin = end = nullptr;
 		_size = 0;
@@ -289,13 +293,33 @@ public:
 		return cur->prev;
 	}
 	
-	void set(int ind, figure s) {
+	void set(int ind, figure x) {
 		if (ind < _size) {
-			figure* cur = begin;
+			figure* cur = begin , * new_figure = new figure;
 			while (ind) { cur = cur->next; ind--; }
-			cur->begin = s.begin;
-			cur->end = s.end;
-			cur->n = s.n;
+			point* curp = x.begin, * new_point;
+			new_figure->begin = nullptr;
+			new_figure->end = nullptr;
+			while (curp) {
+				new_point = new point{ {curp->value.x,curp->value.y} };
+				if (new_figure->begin == nullptr) {
+					new_figure->begin = new_figure->end = new_point;
+				}
+				else {
+					new_point->prev = new_figure->end;
+					(new_figure->end)->next = new_point;
+					new_figure->end = new_point;
+				}
+				curp = curp->next;
+			}
+			new_figure->n = x.n;
+			if (cur->prev) (cur->prev)->next = new_figure;
+			if (cur->next) (cur->next)->prev = new_figure;
+			new_figure->next = cur->next;
+			new_figure->prev = cur->prev;
+			if (cur == begin) begin = new_figure;
+			if (cur == end) end = new_figure;
+			delete cur;
 		}
 	}
 	
@@ -327,8 +351,21 @@ public:
 
 	void append(figure x) {
 		figure* new_figure = new figure;
-		new_figure->begin = x.begin;
-		new_figure->end = x.end;
+		point* cur = x.begin, * new_point;
+		new_figure->begin = nullptr;
+		new_figure->end = nullptr;
+		while (cur) {
+			new_point = new point{ {cur->value.x,cur->value.y} };
+			if (new_figure->begin == nullptr) {
+				new_figure->begin = new_figure->end = new_point;
+			}
+			else {
+				new_point->prev = new_figure->end;
+				(new_figure->end)->next = new_point;
+				new_figure->end = new_point;
+			}
+			cur = cur->next;
+		}
 		new_figure->n = x.n;
 		if (begin == nullptr) {
 			begin = end = new_figure;
@@ -406,9 +443,6 @@ void quick(List& list, figure* l, figure* r, bool growth, int num_keys, int(**ke
 int key1(figure a, figure b);
 int key2(figure a, figure b);
 
-int main() {
-	return 0;
-}
 
 void insert_sort(List& list, bool growth, int num_keys, int(*key)(figure, figure), ...)
 {
@@ -487,7 +521,9 @@ void merge2(List& list, int l, int m, int r, bool growth, int num_keys, int(**ke
 	j = 0;
 	k = l;
 	while (i < n1 && j < n2) {
-		p = comparison(L[i], R[i], num_keys, ky);
+		if (L.size() <= i) p = -1;
+		else if (R.size() <= i) p = 1;
+		else p = comparison(L[i], R[i], num_keys, ky);
 		if ((p < 1 && growth) || (p == 1 && !growth)) {
 			list.set(k, L[i]);
 			i++;
@@ -508,6 +544,7 @@ void merge2(List& list, int l, int m, int r, bool growth, int num_keys, int(**ke
 		j++;
 		k++;
 	}
+	L.clear(); R.clear();
 }
 
 void quick_sort(List& list, bool growth, int num_keys, int(*key)(figure, figure), ...)
@@ -519,7 +556,7 @@ void quick_sort(List& list, bool growth, int num_keys, int(*key)(figure, figure)
 void quick(List& list, figure* l, figure* r, bool growth, int num_keys, int(**key)(figure, figure), ...)
 {
 	bool q = true;
-	int p;
+	int p; 
 	figure* cur = l;
 	figure* t, * l1 = l;
 	while (cur != r) {
@@ -542,4 +579,234 @@ void quick(List& list, figure* l, figure* r, bool growth, int num_keys, int(**ke
 	}
 	if (l != l1) if (list.Prev(l) != nullptr) if (list.Prev(list.Prev(l)) != nullptr) quick(list, l1, list.Prev(l), growth, num_keys, key);
 	if (l != r) if (list.Next(l) != nullptr) if (list.Next(list.Next(l)) != nullptr) quick(list, list.Next(l), r, growth, num_keys, key);
+}
+
+TEST_CASE("testing the list") {
+	CHECK(1 == 1);
+	List list;
+	CHECK(list.get_begin() == nullptr);
+	CHECK(list.get_end() == nullptr);
+	CHECK(list.size() == 0);
+	SUBCASE("append element") {
+		figure x,y;
+		figure* cur;
+		dot d1[3] = { {1,1},{2,2},{3,3} };
+		x.set(3, d1);
+		list.append(x);
+		CHECK(list.get_begin() == list.get_end());
+		CHECK(list.size() == 1);
+		cur = list.get_begin();
+		CHECK(cur->size() == 3);
+		CHECK((*cur)[0].x == 1);
+		CHECK((*cur)[0].y == 1);
+		CHECK((*cur)[1].x == 2);
+		CHECK((*cur)[1].y == 2);
+		CHECK((*cur)[2].x == 3);
+		CHECK((*cur)[2].y == 3);
+		dot d2[2] = { {4,4},{5,5} };
+		x.clear();
+		x.set(2, d2);
+		list.append(x);
+		CHECK(list.get_begin() != list.get_end());
+		CHECK(list.size() == 2);
+		cur = list.Next(cur);
+		CHECK(cur->size() == 2);
+		CHECK((*cur)[0].x == 4);
+		CHECK((*cur)[0].y == 4);
+		CHECK((*cur)[1].x == 5);
+		CHECK((*cur)[1].y == 5);
+		list.swap(0, 1);
+		cur = list.get_begin();
+		CHECK(cur->size() == 2);
+		CHECK((*cur)[0].x == 4);
+		CHECK((*cur)[0].y == 4);
+		CHECK((*cur)[1].x == 5);
+		CHECK((*cur)[1].y == 5);
+		list.clear();
+		CHECK(list.get_begin() == nullptr);
+		CHECK(list.get_end() == nullptr);
+		CHECK(list.size() == 0);
+	}
+}
+
+TEST_CASE("testing insert sort") {
+	List list;
+	figure x;
+	dot d1[1] = { {4,4} };
+	dot d2[1] = { {3,3} };
+	dot d3[1] = { {10,10} };
+	dot d4[1] = { {11,11} };
+	dot d5[1] = { {1,1} };
+	dot d6[1] = { {2,2} };
+	dot d7[1] = { {1,1} };
+	x.set(1, d1);
+	list.append(x);
+	x.set(1, d2);
+	list.append(x);
+	x.set(1, d3);
+	list.append(x);
+	x.set(1, d4);
+	list.append(x);
+	x.set(1, d5);
+	list.append(x);
+	x.set(1, d6);
+	list.append(x);
+	x.set(1, d7);
+	list.append(x);
+	insert_sort(list, true, 2, key2, key1); // ключ key2 завжди повертає 0(елементи рівні), а key1 повертає 1 якщо х першої фігури більше другой і навпаки(при рівності повератє 0)
+	                                        //такі прості ключі обранні для наглядності
+	figure* cur = list.get_begin();;
+	CHECK(list.size() == 7);
+	CHECK((*cur)[0].x == 1);
+	CHECK((*cur)[0].y == 1);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 1);
+	CHECK((*cur)[0].y == 1);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 2);
+	CHECK((*cur)[0].y == 2);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 3);
+	CHECK((*cur)[0].y == 3);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 4);
+	CHECK((*cur)[0].y == 4);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 10);
+	CHECK((*cur)[0].y == 10);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 11);
+	CHECK((*cur)[0].y == 11);
+}
+
+TEST_CASE("testing merge sort") {
+	List list;
+	figure x;
+	dot d1[1] = { {4,4} };
+	dot d2[1] = { {3,3} };
+	dot d3[1] = { {10,10} };
+	dot d4[1] = { {11,11} };
+	dot d5[1] = { {1,1} };
+	dot d6[1] = { {2,2} };
+	dot d7[1] = { {1,1} };
+	x.set(1, d1);
+	list.append(x);
+	x.set(1, d2);
+	list.append(x);
+	x.set(1, d3);
+	list.append(x);
+	x.set(1, d4);
+	list.append(x);
+	x.set(1, d5);
+	list.append(x);
+	x.set(1, d6);
+	list.append(x);
+	x.set(1, d7);
+	list.append(x);
+	merge_sort(list, true, 2, key2, key1);  // ключ key2 завжди повертає 0(елементи рівні), а key1 повертає 1 якщо х першої точки першої фігури більше другой і навпаки(при рівності повератє 0)
+											//такі прості ключі обранні для наглядності
+	figure* cur = list.get_begin();
+	CHECK(list.size() == 7);
+	CHECK((*cur)[0].x == 1);
+	CHECK((*cur)[0].y == 1);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 1);
+	CHECK((*cur)[0].y == 1);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 2);
+	CHECK((*cur)[0].y == 2);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 3);
+	CHECK((*cur)[0].y == 3);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 4);
+	CHECK((*cur)[0].y == 4);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 10);
+	CHECK((*cur)[0].y == 10);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 11);
+	CHECK((*cur)[0].y == 11);
+}
+
+TEST_CASE("testing quick sort") {
+	List list;
+	figure x;
+	dot d1[1] = { {4,4} };
+	dot d2[1] = { {3,3} };
+	dot d3[1] = { {10,10} };
+	dot d4[1] = { {11,11} };
+	dot d5[1] = { {1,1} };
+	dot d6[1] = { {2,2} };
+	dot d7[1] = { {1,1} };
+	x.set(1, d1);
+	list.append(x);
+	x.set(1, d2);
+	list.append(x);
+	x.set(1, d3);
+	list.append(x);
+	x.set(1, d4);
+	list.append(x);
+	x.set(1, d5);
+	list.append(x);
+	x.set(1, d6);
+	list.append(x);
+	x.set(1, d7);
+	list.append(x);
+	quick_sort(list, true, 2, key2, key1);  // ключ key2 завжди повертає 0(елементи рівні), а key1 повертає 1 якщо х першої точки першої фігури більше другой і навпаки(при рівності повератє 0)
+											//такі прості ключі обранні для наглядності
+	figure* cur = list.get_begin();
+	CHECK(list.size() == 7);
+	CHECK((*cur)[0].x == 1);
+	CHECK((*cur)[0].y == 1);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 1);
+	CHECK((*cur)[0].y == 1);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 2);
+	CHECK((*cur)[0].y == 2);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 3);
+	CHECK((*cur)[0].y == 3);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 4);
+	CHECK((*cur)[0].y == 4);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 10);
+	CHECK((*cur)[0].y == 10);
+	cur = list.Next(cur);
+	CHECK((*cur)[0].x == 11);
+	CHECK((*cur)[0].y == 11);
+}
+
+TEST_CASE("testing figure") {
+	figure tr,q;
+	dot d1[] = { {0,0},{2,0},{0,1} };
+	tr.set(3, d1);
+	CHECK(tr.area() == 1);
+	CHECK(tr.Isconvex() == true);
+	CHECK(tr.perimeter() == 3 + sqrt(5));
+	dot d2[] = { {0,0},{2,0},{2,2},{0,2} };
+	q.set(4, d2);
+	CHECK(q.area() == 4);
+	CHECK(q.Isconvex() == true);
+	CHECK(q.CheckRegular() == true);
+	CHECK(q.perimeter() == 8);
+	q.CheckQuadrangle();
+	dot d3[] = { {0,0},{3,0},{4,2},{1,2} };
+	q.set(4, d3);
+	CHECK(q.area() == 6);
+	CHECK(q.Isconvex() == true);
+	CHECK(q.perimeter() == 6 + 2 * sqrt(5));
+	q.CheckQuadrangle();
+	dot d4[] = { {0,0},{1,2},{3,2},{4,0} };
+	q.set(4, d4);
+	CHECK(q.area() == 6);
+	CHECK(q.Isconvex() == true);
+	CHECK(q.perimeter() == 6 + 2 * sqrt(5));
+	q.CheckQuadrangle();
+	dot d5[] = { {0,0},{0,2},{1,1},{2,2},{2,0} };
+	q.set(5, d5);
+	CHECK(q.Isconvex() == false);
+	
 }
