@@ -50,6 +50,16 @@ void Timer::setIs_active(bool is_active)
     _is_active = is_active;
 }
 
+QString Timer::getPath() const
+{
+    return path;
+}
+
+void Timer::setPath(const QString &value)
+{
+    path = value;
+}
+
 Timer::Timer()
 {
     

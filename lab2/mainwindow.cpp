@@ -10,7 +10,9 @@
 #include <QObject>
 #include <QString>
 #include <QMessageBox>
+#include <QMediaPlayer>
 #include "timer.h"
+#include "alarm.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -29,24 +31,18 @@ MainWindow::~MainWindow()
 
 void MainWindow::Timer_Action()
 {
-    for(auto &t : timers) {
-        if (t.is_active()) {
+    for(int i = 0; i < timers.size(); i++) {
+        if (timers[i].is_active()) {
         int hour, minute, second;
         QDateTime x(QDate:: currentDate(),QTime:: currentTime());
-        hour = x.secsTo(t.date_end()) / 3600;
-        minute = (x.secsTo(t.date_end()) % 3600) / 60;
-        second = (x.secsTo(t.date_end()) % 3600) % 60;
+        hour = x.secsTo(timers[i].date_end()) / 3600;
+        minute = (x.secsTo(timers[i].date_end()) % 3600) / 60;
+        second = (x.secsTo(timers[i].date_end()) % 3600) % 60;
         if (hour + minute + second <= 0) {
-            QMessageBox* msgBox = new QMessageBox( this );
-               msgBox->setAttribute( Qt::WA_DeleteOnClose ); //makes sure the msgbox is deleted automatically when closed
-               msgBox->setStandardButtons( QMessageBox::Ok );
-               msgBox->setWindowTitle( tr("Error") );
-               msgBox->setText( tr("Something happened!") );
-               msgBox->setModal( false ); // if you want it non-modal
-               msgBox->open( this, SLOT(msgBoxClosed(QAbstractButton*)) );
-            t.setIs_active(false);
+            timers[i].setIs_active(false);
+            timer_finish(timers[i]);
         }
-        t.treawidgetitem()->setText(0,QString::number(hour) + ':' + QString::number(minute) + ':' + QString::number(second));
+        timers[i].treawidgetitem()->setText(0,QString::number(hour) + ':' + QString::number(minute) + ':' + QString::number(second));
         }
     }
 }
@@ -72,5 +68,34 @@ void MainWindow::Add_Timer(Timer timer)
     minute = (timer.date_start().secsTo(timer.date_end()) % 3600) / 60;
     second = (timer.date_start().secsTo(timer.date_end()) % 3600) % 60;
     timer.treawidgetitem()->setText(0,QString::number(hour) + ':' + QString::number(minute) + ':' + QString::number(second));
+    /*QMessageBox* msgBox = new QMessageBox( this );
+       msgBox->setAttribute( Qt::WA_DeleteOnClose );
+       QPushButton *okButton = msgBox->addButton(QMessageBox::Ok);
+       msgBox->setWindowTitle( tr("Error") );
+       msgBox->setText( tr("Something happened!") );
+       msgBox->setModal( false );
+    timer.setDel_button(okButton);
+    timer.setFinish_message(msgBox);
+    timer.q = true;*/
     timers.push_back(timer);
+}
+
+void MainWindow::timer_finish(Timer timer)
+{
+    alarm *alarmwindow = new alarm(this);
+    alarmwindow->show();
+    emit Path(timer.getPath());
+    //timer.finish_message()->show();
+    /*QMediaPlayer *music = new QMediaPlayer();
+    music->setMedia(QUrl("qrc:/sound/alarm1.mp3"));
+    music->play();
+    QMessageBox* msgBox = new QMessageBox( this );
+       msgBox->setAttribute( Qt::WA_DeleteOnClose );
+       //msgBox->setStandardButtons( QMessageBox::Ok );
+       QPushButton *abortButton = msgBox->addButton(QMessageBox::Ok);
+       msgBox->setWindowTitle( tr("Error") );
+       msgBox->setText( tr("Something happened!") );
+       msgBox->setModal( false );
+       msgBox->show();
+    if (msgBox->clickedButton() == abortButton) qDebug() << "ewf";*/
 }
