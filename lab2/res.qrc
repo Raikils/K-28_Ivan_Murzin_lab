@@ -1,6 +1,13 @@
 <RCC>
     <qresource prefix="/sound">
         <file>alarm1.mp3</file>
+        <file>alarm2.mp3</file>
+        <file>alarm3.mp3</file>
+        <file>alarm4.mp3</file>
     </qresource>
-    <qresource prefix="/new/prefix1"/>
+    <qresource prefix="/icon">
+        <file>alarm-clock.png</file>
+        <file>start.png</file>
+        <file>stop.png</file>
+    </qresource>
 </RCC>

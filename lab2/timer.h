@@ -6,6 +6,8 @@
 #include <QTreeWidgetItem>
 #include <QMessageBox>
 #include <QMediaPlayer>
+#include <QString>
+#include "alarm.h"
 
 class Timer
 {
@@ -16,6 +18,11 @@ private:
     QTreeWidgetItem *_treawidgetitem;
     bool _is_active;
     QString path;
+    alarm *alarmwindow;
+    bool should_delete;
+    bool _is_timer;
+    QString _name;
+
 public:
     Timer();
     QDateTime date_start() const;
@@ -30,6 +37,16 @@ public:
     void setIs_active(bool is_active);
     QString getPath() const;
     void setPath(const QString &value);
+    alarm *getAlarmwindow() const;
+    void setAlarmwindow(alarm *value);
+    bool getShould_delete() const;
+    void setShould_delete(bool value);
+    bool getIs_timer() const;
+    void setIs_timer(bool is_timer);
+    QString getName() const;
+    void setName(const QString &name);
 };
+QDataStream &operator<<(QDataStream &out, const Timer &timer);
+QDataStream &operator>>(QDataStream &in, Timer &timer);
 
 #endif // TIMER_H

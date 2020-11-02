@@ -8,7 +8,8 @@ alarm::alarm(QWidget *parent) :
     ui(new Ui::alarm)
 {
     ui->setupUi(this);
-    connect(parent,SIGNAL(Path(QString)),this,SLOT(Sound_on(QString)));
+    sound = new QMediaPlayer(this);
+    connect(parent,SIGNAL(Path(QString, int, QString)),this,SLOT(Sound_on(QString, int, QString)));
 }
 
 alarm::~alarm()
@@ -16,19 +17,26 @@ alarm::~alarm()
     delete ui;
 }
 
-void alarm::Sound_on(QString path)
+void alarm::Sound_on(QString path, int i, QString name)
 {
-    QMediaPlayer *music = new QMediaPlayer(this);
-    music->setMedia(QUrl(path));
-    music->play();
+    sound->setMedia(QUrl(path));
+    sound->play();
+    iterator = i;
+    ui->label->setText(name);
 }
 
 void alarm::on_pushButton_Snooze_clicked()
 {
-
+    sound->stop();
+    delete sound;
+    close();
+    emit Snooze(iterator);
 }
 
 void alarm::on_pushButton_Dismiss_clicked()
 {
-
+    sound->stop();
+    delete sound;
+    close();
+    emit Dismiss(iterator);
 }

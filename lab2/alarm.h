@@ -2,6 +2,7 @@
 #define ALARM_H
 
 #include <QDialog>
+#include <QMediaPlayer>
 
 namespace Ui {
 class alarm;
@@ -15,8 +16,16 @@ public:
     explicit alarm(QWidget *parent = nullptr);
     ~alarm();
 
+signals:
+    void Dismiss(int i);
+    void Snooze(int i);
+
+private:
+    QMediaPlayer *sound;
+    int iterator;
+
 private slots:
-    void Sound_on(QString path);
+    void Sound_on(QString path, int i, QString name);
 
     void on_pushButton_Snooze_clicked();
 
