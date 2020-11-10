@@ -40,3 +40,11 @@ void alarm::on_pushButton_Dismiss_clicked()
     close();
     emit Dismiss(iterator);
 }
+
+void alarm::on_pushButton_Stop_clicked()
+{
+    sound->stop();
+    delete sound;
+    close();
+    emit Stop(iterator);
+}

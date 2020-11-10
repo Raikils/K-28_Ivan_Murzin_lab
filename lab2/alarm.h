@@ -19,6 +19,7 @@ public:
 signals:
     void Dismiss(int i);
     void Snooze(int i);
+    void Stop(int i);
 
 private:
     QMediaPlayer *sound;
@@ -30,6 +31,8 @@ private slots:
     void on_pushButton_Snooze_clicked();
 
     void on_pushButton_Dismiss_clicked();
+
+    void on_pushButton_Stop_clicked();
 
 private:
     Ui::alarm *ui;

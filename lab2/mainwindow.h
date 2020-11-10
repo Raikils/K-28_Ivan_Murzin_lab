@@ -32,6 +32,7 @@ signals:
 private slots:
     void Dismiss(int i);
     void Snooze(int i);
+    void Stop(int i);
     void on_AddButton_clicked();
     void Add_Timer(Timer timer);
     void timer_finish(Timer &timer, int i);

@@ -113,7 +113,7 @@ void MainWindow::Timer_Action()
         }
     }
     if(timers.size() == 0 || dtmin == -1) progress->setValue(0);
-    else progress->setValue(100 * (timers[dtmin].date_start().secsTo(timers[dtmin].date_end()) - y.secsTo(timers[dtmin].date_end())) / timers[dtmin].date_start().secsTo(timers[dtmin].date_end()));
+    else if(timers[dtmin].date_start().secsTo(timers[dtmin].date_end()) != 0) progress->setValue(100 * (timers[dtmin].date_start().secsTo(timers[dtmin].date_end()) - y.secsTo(timers[dtmin].date_end())) / timers[dtmin].date_start().secsTo(timers[dtmin].date_end())); else progress->setValue(100);
 }
 
 void MainWindow::showEvent(QShowEvent *ev)
@@ -141,6 +141,11 @@ void MainWindow::Snooze(int i)
     timers[i].setIs_active(true);
     timers[i].treawidgetitem()->setText(3,"+");
     delete timers[i].getAlarmwindow();
+}
+
+void MainWindow::Stop(int i)
+{
+
 }
 
 
